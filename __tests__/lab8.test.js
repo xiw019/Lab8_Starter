@@ -26,7 +26,7 @@ describe('Basic user flow for Website', () => {
     // TODO - Step 1
     // Right now this function is only checking the first <product-item> it found, make it so that
     // it checks every <product-item> it found
-    for (let i = 0; i < 20; i++) {
+    for (let i = 0; i < prodItems.length; i++) {
       console.log(`Checking product item ${i}/${prodItems.length}`);
       // Grab the .data property of <product-items> to grab all of the json data stored inside
       data = await prodItems[i].getProperty('data');
@@ -71,7 +71,7 @@ describe('Basic user flow for Website', () => {
     // Check to see if the innerText of #cart-count is 20
     let listItems, cartCont, innerText;
     listItems = await page.$$('product-item');
-    for (let i = 0; i < 20; i++) {
+    for (let i = 0; i < listItems.length; i++) {
       let shadowRt = await listItems[i].getProperty('shadowRoot');
       let button = await shadowRt.$('button');
       await button.click();
@@ -90,12 +90,12 @@ describe('Basic user flow for Website', () => {
     // Also check to make sure that #cart-count is still 20
     await page.reload();
     let listItems = await page.$$('product-item');
-    for (let i = 0; i < 20; i++) {
-      let shadowRt, button, innerText;
+    for (let i = 0; i < listItems.length; i++) {
+      let shadowRt, button, buttonText;
       shadowRt = await listItems[i].getProperty('shadowRoot')
       button = await shadowRt.$('button')
-      innerText = await button.getProperty('innerText');
-      expect(innerText['_remoteObject'].value).toBe('Remove from Cart')
+      buttonText = await button.getProperty('innerText');
+      expect(buttonText['_remoteObject'].value).toBe('Remove from Cart')
     }
     let cartCont = await page.$('#cart-count');
     let innerText = await cartCont.getProperty('innerText');
@@ -107,7 +107,10 @@ describe('Basic user flow for Website', () => {
     // TODO - Step 5
     // At this point the item 'cart' in localStorage should be 
     // '[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]', check to make sure it is
-
+    let cart = await localStorage.getItem('cart');
+    for (let i = 1; i < 21; i++) {
+      expect(cart[i-1]).toBe(`${i}`)
+    } 
   });
 
   // Checking to make sure that if you remove all of the items from the cart that the cart
@@ -117,6 +120,16 @@ describe('Basic user flow for Website', () => {
     // TODO - Step 6
     // Go through and click "Remove from Cart" on every single <product-item>, just like above.
     // Once you have, check to make sure that #cart-count is now 0
+    let listItems = await page.$$('product-item');
+    for (let i = 0; i < listItems.length; i++) {
+      let shadowRt, button;
+      shadowRt = await listItems[i].getProperty('shadowRoot')
+      button = await shadowRt.$('button')
+      await button.click();
+    }
+    let cartCont = await page.$('#cart-count');
+    let innerText = await cartCont.getProperty('innerText');
+    expect(innerText['_remoteObject'].value).toBe('0');
   }, 10000);
 
   // Checking to make sure that it remembers us removing everything from the cart
@@ -127,6 +140,18 @@ describe('Basic user flow for Website', () => {
     // Reload the page once more, then go through each <product-item> to make sure that it has remembered nothing
     // is in the cart - do this by checking the text on the buttons so that they should say "Add to Cart".
     // Also check to make sure that #cart-count is still 0
+    await page.reload();
+    let listItems = await page.$$('product-item');
+    for (let i = 0; i < listItems.length; i++) {
+      let shadowRt, button, buttonText;
+      shadowRt = await listItems[i].getProperty('shadowRoot');
+      button = await shadowRt.$('button');
+      buttonText = await button.getProperty('innerText');
+      expect(buttonText['_remoteObject'].value).toBe('Add to Cart');
+    }
+    let cartCont = await page.$('#cart-count');
+    let innerText = await cartCont.getProperty('innerText');
+    expect(innerText['_remoteObject'].value).toBe('0');
   }, 10000);
 
   // Checking to make sure that localStorage for the cart is as we'd expect for the
